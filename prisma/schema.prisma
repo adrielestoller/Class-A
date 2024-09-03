@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  role      String    @default("student")
+  student   Student?  // Relacionamento opcional, já que nem todo User precisa ser um Student
+  teacher   Teacher?  // Relacionamento opcional, já que nem todo User precisa ser um Teacher
+}
+
+model Student {
+  registration String @id @default(uuid())
+  userId       Int @unique
+  user         User    @relation(fields: [userId], references: [id])
+  classroomId  Int
+  classroom    Classroom @relation(fields: [classroomId], references: [id])
+}
+
+model Teacher {
+  id         Int       @id @default(autoincrement())
+  name       String
+  subjects   Subject[]
+  classrooms Classroom[]
+  userId     Int  @unique
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model Classroom {
+  id        Int       @id @default(autoincrement())
+  className String
+  students  Student[]
+  teachers  Teacher[]
+  subjects  Subject[]
+}
+
+model Subject {
+  id          Int       @id @default(autoincrement())
+  name        String
+  schedule    String    // Aqui você pode definir o formato do horário (ex: "10:30-12:00")
+  dayOfWeek   String    // Dia da semana (ex: "Monday")
+  teacherId   Int
+  teacher     Teacher   @relation(fields: [teacherId], references: [id])
+  classroomId Int
+  classroom   Classroom @relation(fields: [classroomId], references: [id])
+}
